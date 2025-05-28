@@ -1,0 +1,50 @@
+package <%= base_package_name %>.application.service;
+
+import <%= base_package_name %>.domain.model.<%= entity_name %>;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.util.Optional;
+
+/**
+ * Service interface for managing <%= entity_name %> entities.
+ */
+public interface <%= entity_name %>Service {
+    /**
+     * Save a <%= entity_name.toLowerCase() %>.
+     *
+     * @param <%= entity_name.toLowerCase() %> the entity to save.
+     * @return the persisted entity.
+     */
+    <%= entity_name %> save(<%= entity_name %> <%= entity_name.toLowerCase() %>);
+
+    /**
+     * Get all the <%= entity_name.toLowerCase() %>s with pagination.
+     *
+     * @param pageable the pagination information.
+     * @return the page of entities.
+     */
+    Page<<%= entity_name %>> findAll(Pageable pageable);
+
+    /**
+     * Get the <%= entity_name.toLowerCase() %> by id.
+     *
+     * @param id the id of the entity.
+     * @return the entity.
+     */
+    Optional<<%= entity_name %>> findById(Long id);
+
+    /**
+     * Delete the <%= entity_name.toLowerCase() %> by id.
+     *
+     * @param id the id of the entity.
+     */
+    void deleteById(Long id);
+
+    /**
+     * Check if an entity exists by its id.
+     *
+     * @param id the id of the entity.
+     * @return true if the entity exists, false otherwise.
+     */
+    boolean existsById(Long id);
+} 

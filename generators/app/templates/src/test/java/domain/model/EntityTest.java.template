@@ -1,0 +1,89 @@
+package <%= base_package_name %>.domain.model;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.time.LocalDateTime;
+<% if (imports) { %>
+<%= imports %>
+<% } %>
+
+class <%= entity_name %>Test extends BaseEntityTest<<%= entity_name %>> {
+
+    @Override
+    protected <%= entity_name %> createEntity() {
+        return new <%= entity_name %>();
+    }
+
+    @Override
+    protected void assertEntityEquals(<%= entity_name %> expected, <%= entity_name %> actual) {
+        assertEquals(expected.getId(), actual.getId());
+        <% fields.forEach(function(field) { %>
+        assertEquals(expected.get<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>(), actual.get<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>());
+        <% }); %>
+    }
+
+    @Test
+    void test<%= entity_name %>Creation() {
+        <%= entity_name %> entity = createEntity();
+        assertNotNull(entity);
+        assertTrue(entity.isActive());
+    }
+
+    <% fields.forEach(function(field) { %>
+    @Test
+    void test<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>Field() {
+        <%= entity_name %> entity = createEntity();
+        <% if (field.type === 'String') { %>
+        String testValue = "test<%= field.name %>";
+        <% } else if (field.type === 'Integer') { %>
+        Integer testValue = 1;
+        <% } else if (field.type === 'Long') { %>
+        Long testValue = 1L;
+        <% } else if (field.type === 'Double') { %>
+        Double testValue = 1.0;
+        <% } else if (field.type === 'LocalDate') { %>
+        LocalDate testValue = LocalDate.now();
+        <% } else if (field.type === 'LocalDateTime') { %>
+        LocalDateTime testValue = LocalDateTime.now();
+        <% } else if (field.type === 'Boolean') { %>
+        Boolean testValue = true;
+        <% } else { %>
+        // Add appropriate test value for <%= field.type %>
+        <% } %>
+        
+        entity.set<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>(testValue);
+        assertEquals(testValue, entity.get<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>());
+    }
+    <% }); %>
+
+    <% if (fields.some(f => f.required)) { %>
+    @Test
+    void testRequiredFields() {
+        <%= entity_name %> entity = createEntity();
+        <% fields.filter(f => f.required).forEach(function(field) { %>
+        assertThrows(IllegalArgumentException.class, () -> {
+            entity.set<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>(null);
+        });
+        <% }); %>
+    }
+    <% } %>
+
+    <% if (fields.some(f => f.validations && f.validations.length > 0)) { %>
+    @Test
+    void testValidations() {
+        <%= entity_name %> entity = createEntity();
+        <% fields.filter(f => f.validations && f.validations.length > 0).forEach(function(field) { %>
+        <% if (field.validations.includes('NotBlank') || field.validations.includes('NotEmpty')) { %>
+        assertThrows(IllegalArgumentException.class, () -> {
+            entity.set<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>("");
+        });
+        <% } %>
+        <% if (field.validations.includes('Min')) { %>
+        assertThrows(IllegalArgumentException.class, () -> {
+            entity.set<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>(<%= field.type === 'Integer' || field.type === 'Long' ? '-1' : '-1.0' %>);
+        });
+        <% } %>
+        <% }); %>
+    }
+    <% } %>
+} 

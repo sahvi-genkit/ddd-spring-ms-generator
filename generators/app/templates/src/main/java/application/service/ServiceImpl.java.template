@@ -1,0 +1,56 @@
+package <%= base_package_name %>.application.service;
+
+import <%= base_package_name %>.domain.model.<%= entity_name %>;
+import <%= base_package_name %>.domain.repository.<%= entity_name %>Repository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.Optional;
+
+/**
+ * Service implementation for managing <%= entity_name %> entities.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class <%= entity_name %>ServiceImpl implements <%= entity_name %>Service {
+
+    private final <%= entity_name %>Repository <%= entity_name.toLowerCase() %>Repository;
+
+    @Override
+    public <%= entity_name %> save(<%= entity_name %> <%= entity_name.toLowerCase() %>) {
+        log.debug("Request to save <%= entity_name %> : {}", <%= entity_name.toLowerCase() %>);
+        return <%= entity_name.toLowerCase() %>Repository.save(<%= entity_name.toLowerCase() %>);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<<%= entity_name %>> findAll(Pageable pageable) {
+        log.debug("Request to get all <%= entity_name %>s with pagination: {}", pageable);
+        return <%= entity_name.toLowerCase() %>Repository.findAll(pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<<%= entity_name %>> findById(Long id) {
+        log.debug("Request to get <%= entity_name %> by id: {}", id);
+        return <%= entity_name.toLowerCase() %>Repository.findById(id);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        log.debug("Request to delete <%= entity_name %> with id: {}", id);
+        <%= entity_name.toLowerCase() %>Repository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsById(Long id) {
+        log.debug("Request to check if <%= entity_name %> exists with id: {}", id);
+        return <%= entity_name.toLowerCase() %>Repository.existsById(id);
+    }
+} 

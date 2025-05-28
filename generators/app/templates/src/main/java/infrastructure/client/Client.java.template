@@ -1,0 +1,43 @@
+package <%= base_package_name %>.infrastructure.client.<%= client_name.toLowerCase() %>;
+
+import <%= base_package_name %>.infrastructure.config.RestClientProperties;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import java.util.Map;
+import java.util.HashMap;
+import com.example.orders.infrastructure.client.BaseRestClient;
+
+@Service
+public class <%= client_name %>Client extends BaseRestClient {
+
+    public <%= client_name %>Client(RestTemplate restTemplate, RestClientProperties properties) {
+        super(restTemplate, properties);
+    }
+
+    <% endpoints.forEach(function(endpoint) { %>
+    <% if (endpoint.method === 'GET') { %>
+    public <%= endpoint.responseType %> <%= endpoint.name %>() {
+        ResponseEntity<<%= endpoint.responseType %>> response = get("<%= endpoint.path %>", <%= endpoint.responseType %>.class);
+        return handleResponse(response)
+            .orElseThrow(() -> new RuntimeException("<%= endpoint.name %> failed"));
+    }
+    <% } else if (endpoint.method === 'POST') { %>
+    public <%= endpoint.responseType %> <%= endpoint.name %>(<%= endpoint.requestType %> request) {
+        ResponseEntity<<%= endpoint.responseType %>> response = post("<%= endpoint.path %>", request, <%= endpoint.responseType %>.class);
+        return handleResponse(response)
+            .orElseThrow(() -> new RuntimeException("<%= endpoint.name %> failed"));
+    }
+    <% } else if (endpoint.method === 'PUT') { %>
+    public <%= endpoint.responseType %> <%= endpoint.name %>(<%= endpoint.requestType %> request) {
+        ResponseEntity<<%= endpoint.responseType %>> response = put("<%= endpoint.path %>", request, <%= endpoint.responseType %>.class);
+        return handleResponse(response)
+            .orElseThrow(() -> new RuntimeException("<%= endpoint.name %> failed"));
+    }
+    <% } else if (endpoint.method === 'DELETE') { %>
+    public void <%= endpoint.name %>() {
+        delete("<%= endpoint.path %>");
+    }
+    <% } %>
+    <% }); %>
+}

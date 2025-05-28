@@ -1,0 +1,27 @@
+package <%= base_package_name %>.infrastructure.client.<%= client_name.toLowerCase() %>;
+
+<% imports.forEach(function(imp) { %>
+import <%= imp %>;
+<% }); %>
+
+/**
+ * Request object for <%= client_name %> service.
+ * <%= type_name %> represents the request payload for <%= client_name.toLowerCase() %> service operations.
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class <%= type_name %> {
+    <% fields.forEach(function(field) { %>
+    /**
+     * <%= field.description %>
+     */
+    <% if (field.required) { %>@NotNull<% } %>
+    <% field.validations.forEach(function(validation) { %>
+    @<%= validation.type %>(<% if (validation.value) { %>value = "<%= validation.value %>", <% } %><% if (validation.message) { %>message = "<%= validation.message %>"<% } %><% if (validation.regexp) { %>, regexp = "<%= validation.regexp %>"<% } %><% if (validation.fraction) { %>, fraction = <%= validation.fraction %><% } %><% if (validation.integer) { %>, integer = <%= validation.integer %><% } %>)
+    <% }); %>
+    private <%= field.type %> <%= field.name %>;
+
+    <% }); %>
+}

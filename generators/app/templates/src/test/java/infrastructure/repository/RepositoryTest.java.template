@@ -1,0 +1,148 @@
+package <%= base_package_name %>.infrastructure.repository;
+
+import <%= base_package_name %>.domain.model.<%= entity_name %>;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Integration tests for the {@link <%= entity_name %>Repository}.
+ */
+@DataJpaTest
+class <%= entity_name %>RepositoryTest {
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Autowired
+    private <%= entity_name %>Repository <%= entity_name.toLowerCase() %>Repository;
+
+    @Test
+    void shouldSave<%= entity_name %>() {
+        // given
+        <%= entity_name %> <%= entity_name.toLowerCase() %> = new <%= entity_name %>();
+        // Set required fields
+        // <%= entity_name.toLowerCase() %>.setName("Test <%= entity_name %>");
+
+        // when
+        <%= entity_name %> saved<%= entity_name %> = <%= entity_name.toLowerCase() %>Repository.save(<%= entity_name.toLowerCase() %>);
+
+        // then
+        assertThat(saved<%= entity_name %>.getId()).isNotNull();
+        assertThat(entityManager.find(<%= entity_name %>.class, saved<%= entity_name %>.getId())).isNotNull();
+    }
+
+    @Test
+    void shouldFind<%= entity_name %>ById() {
+        // given
+        <%= entity_name %> <%= entity_name.toLowerCase() %> = new <%= entity_name %>();
+        // Set required fields
+        // <%= entity_name.toLowerCase() %>.setName("Test <%= entity_name %>");
+        entityManager.persist(<%= entity_name.toLowerCase() %>);
+        entityManager.flush();
+
+        // when
+        Optional<<%= entity_name %>> found = <%= entity_name.toLowerCase() %>Repository.findById(<%= entity_name.toLowerCase() %>.getId());
+
+        // then
+        assertThat(found).isPresent();
+        assertThat(found.get().getId()).isEqualTo(<%= entity_name.toLowerCase() %>.getId());
+    }
+
+    @Test
+    void shouldFindAll<%= entity_name %>s() {
+        // given
+        <%= entity_name %> <%= entity_name.toLowerCase() %>1 = new <%= entity_name %>();
+        // Set required fields
+        // <%= entity_name.toLowerCase() %>1.setName("Test <%= entity_name %> 1");
+        entityManager.persist(<%= entity_name.toLowerCase() %>1);
+
+        <%= entity_name %> <%= entity_name.toLowerCase() %>2 = new <%= entity_name %>();
+        // Set required fields
+        // <%= entity_name.toLowerCase() %>2.setName("Test <%= entity_name %> 2");
+        entityManager.persist(<%= entity_name.toLowerCase() %>2);
+        entityManager.flush();
+
+        // when
+        Page<<%= entity_name %>> <%= entity_name.toLowerCase() %>s = <%= entity_name.toLowerCase() %>Repository.findAll(PageRequest.of(0, 10));
+
+        // then
+        assertThat(<%= entity_name.toLowerCase() %>s.getContent()).hasSize(2);
+        assertThat(<%= entity_name.toLowerCase() %>s.getTotalElements()).isEqualTo(2);
+    }
+
+    @Test
+    void shouldDelete<%= entity_name %>() {
+        // given
+        <%= entity_name %> <%= entity_name.toLowerCase() %> = new <%= entity_name %>();
+        // Set required fields
+        // <%= entity_name.toLowerCase() %>.setName("Test <%= entity_name %>");
+        entityManager.persist(<%= entity_name.toLowerCase() %>);
+        entityManager.flush();
+
+        // when
+        <%= entity_name.toLowerCase() %>Repository.delete(<%= entity_name.toLowerCase() %>);
+        entityManager.flush();
+
+        // then
+        assertThat(entityManager.find(<%= entity_name %>.class, <%= entity_name.toLowerCase() %>.getId())).isNull();
+    }
+
+    <% if (fields && fields.length > 0) { %>
+    <% fields.forEach(function(field) { %>
+    <% if (field.searchable) { %>
+    @Test
+    void shouldFindBy<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>() {
+        // given
+        <%= entity_name %> <%= entity_name.toLowerCase() %> = new <%= entity_name %>();
+        // Set required fields including <%= field.name %>
+        // <%= entity_name.toLowerCase() %>.set<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>(/* test value */);
+        entityManager.persist(<%= entity_name.toLowerCase() %>);
+        entityManager.flush();
+
+        // when
+        Optional<<%= entity_name %>> found = <%= entity_name.toLowerCase() %>Repository.findBy<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>(<%= entity_name.toLowerCase() %>.get<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>());
+
+        // then
+        assertThat(found).isPresent();
+        assertThat(found.get().get<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>())
+            .isEqualTo(<%= entity_name.toLowerCase() %>.get<%= field.name.charAt(0).toUpperCase() + field.name.slice(1) %>());
+    }
+    <% } %>
+    <% }); %>
+    <% } %>
+
+    <% if (endpoints && endpoints.length > 0) { %>
+    <% endpoints.forEach(function(endpoint) { %>
+    <% if (endpoint.parameters && endpoint.parameters.some(p => p.searchable)) { %>
+    @Test
+    void should<%= endpoint.name.charAt(0).toUpperCase() + endpoint.name.slice(1) %>() {
+        // TODO: Implement test for custom repository method <%= endpoint.name %>
+        // This is a placeholder test that should be implemented based on the specific repository method requirements
+        // given
+        <%= entity_name %> <%= entity_name.toLowerCase() %> = new <%= entity_name %>();
+        // Set required fields
+        entityManager.persist(<%= entity_name.toLowerCase() %>);
+        entityManager.flush();
+
+        // when
+        // Call the custom repository method and verify results
+        // Example:
+        // List<<%= entity_name %>> results = <%= entity_name.toLowerCase() %>Repository.<%= endpoint.name %>(/* parameters */);
+
+        // then
+        // Assert the results
+        // assertThat(results).isNotEmpty();
+    }
+    <% } %>
+    <% }); %>
+    <% } %>
+} 

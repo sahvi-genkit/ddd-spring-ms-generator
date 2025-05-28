@@ -1,0 +1,174 @@
+package <%= base_package_name %>.infrastructure.controller;
+
+import <%= base_package_name %>.application.service.<%= entity_name %>Service;
+import <%= base_package_name %>.domain.model.<%= entity_name %>;
+import <%= base_package_name %>.infrastructure.dto.<%= entity_name %>DTO;
+import <%= base_package_name %>.infrastructure.mapper.<%= entity_name %>Mapper;
+import jakarta.validation.constraints.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("<%= api_context_path %>/<%= entity_name.toLowerCase() %>s")
+@Tag(name = "<%= entity_name %>", description = "<%= entity_name %> management APIs")
+public class <%= entity_name %>Controller {
+
+    <% if ((entity.crudOperations && entity.crudOperations.enabled) || (entity.endpoints && entity.endpoints.length > 0)) { %>
+    private final <%= entity_name %>Service <%= entity_name.toLowerCase() %>Service;
+    private final <%= entity_name %>Mapper <%= entity_name.toLowerCase() %>Mapper;
+    <% } %>
+
+    <% if (entity.crudOperations && entity.crudOperations.enabled) { %>
+    <% if (entity.crudOperations.operations.getAll && entity.crudOperations.operations.getAll.enabled) { %>
+    @Operation(summary = "<%= entity.crudOperations.operations.getAll.summary %>", description = "<%= entity.crudOperations.operations.getAll.description %>")
+    @ApiResponses(value = {
+        <% const getAllResponses = entity.crudOperations.operations.getAll.responses; %>
+        <% getAllResponses.forEach((response, index) => { %>
+        @ApiResponse(responseCode = "<%= response.code %>", description = "<%= response.description %>"<% if (response.content && response.content['application/json']) { %>,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = <%= response.content['application/json'].schema.type === 'array' ? 'List.class' : entity_name + '.class' %>))<% } %>)<%= index < getAllResponses.length - 1 ? ',' : '' %>
+        <% }); %>
+    })
+    @GetMapping
+    public ResponseEntity<Page<<%= entity_name %>DTO>> getAll(
+            @PageableDefault(size = 20) Pageable pageable) {
+        log.debug("REST request to get all <%= entity_name %>s with pagination: {}", pageable);
+        Page<<%= entity_name %>> page = <%= entity_name.toLowerCase() %>Service.findAll(pageable);
+        return ResponseEntity.ok(page.map(<%= entity_name.toLowerCase() %>Mapper::toDto));
+    }
+
+    <% } %>
+    <% if (entity.crudOperations.operations.getById && entity.crudOperations.operations.getById.enabled) { %>
+    @Operation(summary = "<%= entity.crudOperations.operations.getById.summary %>", description = "<%= entity.crudOperations.operations.getById.description %>")
+    @ApiResponses(value = {
+        <% const getByIdResponses = entity.crudOperations.operations.getById.responses; %>
+        <% getByIdResponses.forEach((response, index) => { %>
+        @ApiResponse(responseCode = "<%= response.code %>", description = "<%= response.description %>"<% if (response.content && response.content['application/json']) { %>,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = <%= entity_name + '.class' %>))<% } %>)<%= index < getByIdResponses.length - 1 ? ',' : '' %>
+        <% }); %>
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<<%= entity_name %>DTO> getById(
+            @Parameter(description = "ID of the <%= entity_name.toLowerCase() %> to retrieve") @PathVariable Long id) {
+        log.debug("REST request to get <%= entity_name %> by id: {}", id);
+        return <%= entity_name.toLowerCase() %>Service.findById(id)
+                .map(<%= entity_name.toLowerCase() %>Mapper::toDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    <% } %>
+    <% if (entity.crudOperations.operations.create && entity.crudOperations.operations.create.enabled) { %>
+    @Operation(summary = "<%= entity.crudOperations.operations.create.summary %>", description = "<%= entity.crudOperations.operations.create.description %>")
+    @ApiResponses(value = {
+        <% const createResponses = entity.crudOperations.operations.create.responses; %>
+        <% createResponses.forEach((response, index) => { %>
+        @ApiResponse(responseCode = "<%= response.code %>", description = "<%= response.description %>"<% if (response.content && response.content['application/json']) { %>,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = <%= entity_name + '.class' %>))<% } %>)<%= index < createResponses.length - 1 ? ',' : '' %>
+        <% }); %>
+    })
+    @PostMapping
+    public ResponseEntity<<%= entity_name %>DTO> create(
+            @Parameter(description = "<%= entity_name %> to create") @Valid @RequestBody <%= entity_name %>DTO <%= entity_name.toLowerCase() %>DTO) {
+        log.debug("REST request to create <%= entity_name %>: {}", <%= entity_name.toLowerCase() %>DTO);
+        <%= entity_name %> <%= entity_name.toLowerCase() %> = <%= entity_name.toLowerCase() %>Mapper.toEntity(<%= entity_name.toLowerCase() %>DTO);
+        <%= entity_name %> saved<%= entity_name %> = <%= entity_name.toLowerCase() %>Service.save(<%= entity_name.toLowerCase() %>);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(<%= entity_name.toLowerCase() %>Mapper.toDto(saved<%= entity_name %>));
+    }
+
+    <% } %>
+    <% if (entity.crudOperations.operations.update && entity.crudOperations.operations.update.enabled) { %>
+    @Operation(summary = "<%= entity.crudOperations.operations.update.summary %>", description = "<%= entity.crudOperations.operations.update.description %>")
+    @ApiResponses(value = {
+        <% const updateResponses = entity.crudOperations.operations.update.responses; %>
+        <% updateResponses.forEach((response, index) => { %>
+        @ApiResponse(responseCode = "<%= response.code %>", description = "<%= response.description %>"<% if (response.content && response.content['application/json']) { %>,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = <%= entity_name + '.class' %>))<% } %>)<%= index < updateResponses.length - 1 ? ',' : '' %>
+        <% }); %>
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<<%= entity_name %>DTO> update(
+            @Parameter(description = "ID of the <%= entity_name.toLowerCase() %> to update") @PathVariable Long id,
+            @Parameter(description = "Updated <%= entity_name.toLowerCase() %> data") @Valid @RequestBody <%= entity_name %>DTO <%= entity_name.toLowerCase() %>DTO) {
+        log.debug("REST request to update <%= entity_name %> with id {}: {}", id, <%= entity_name.toLowerCase() %>DTO);
+        if (!<%= entity_name.toLowerCase() %>Service.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        <%= entity_name %> <%= entity_name.toLowerCase() %> = <%= entity_name.toLowerCase() %>Mapper.toEntity(<%= entity_name.toLowerCase() %>DTO);
+        <%= entity_name.toLowerCase() %>.setId(id);
+        <%= entity_name %> updated<%= entity_name %> = <%= entity_name.toLowerCase() %>Service.save(<%= entity_name.toLowerCase() %>);
+        return ResponseEntity.ok(<%= entity_name.toLowerCase() %>Mapper.toDto(updated<%= entity_name %>));
+    }
+
+    <% } %>
+    <% if (entity.crudOperations.operations.delete && entity.crudOperations.operations.delete.enabled) { %>
+    @Operation(summary = "<%= entity.crudOperations.operations.delete.summary %>", description = "<%= entity.crudOperations.operations.delete.description %>")
+    @ApiResponses(value = {
+        <% const deleteResponses = entity.crudOperations.operations.delete.responses; %>
+        <% deleteResponses.forEach((response, index) => { %>
+        @ApiResponse(responseCode = "<%= response.code %>", description = "<%= response.description %>")<%= index < deleteResponses.length - 1 ? ',' : '' %>
+        <% }); %>
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @Parameter(description = "ID of the <%= entity_name.toLowerCase() %> to delete") @PathVariable Long id) {
+        log.debug("REST request to delete <%= entity_name %> with id: {}", id);
+        if (!<%= entity_name.toLowerCase() %>Service.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        <%= entity_name.toLowerCase() %>Service.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    <% } %>
+    <% } %>
+    <% if (entity.endpoints && entity.endpoints.length > 0) { %>
+    <% entity.endpoints.forEach(endpoint => { %>
+    @Operation(summary = "<%= endpoint.summary %>", description = "<%= endpoint.description %>")
+    @ApiResponses(value = {
+        <% if (endpoint.responses) { %>
+        <% endpoint.responses.forEach((response, index) => { %>
+        @ApiResponse(responseCode = "<%= response.code %>", description = "<%= response.description %>"<% if (response.content && response.content['application/json']) { %>,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = <%=
+                response.content['application/json'].schema.type === 'array' ? 'List.class' :
+                response.content['application/json'].schema.$ref ?
+                    response.content['application/json'].schema.$ref.split('/').pop() + '.class' :
+                    entity_name + '.class' %>))<% } %>)<%= index < endpoint.responses.length - 1 ? ',' : '' %>
+        <% }); %>
+        <% } %>
+    })
+    @<%= endpoint.method %>Mapping("<%- endpoint.path %>")
+    public <%- endpoint.returnType %> <%= endpoint.name %>(
+        <% if (endpoint.parameters && endpoint.parameters.length > 0) { %>
+        <% endpoint.parameters.forEach((param, index) => { %>
+        @Parameter(description = "<%= param.description %>")<% if (param.in === 'path') { %> @PathVariable<% } else if (param.in === 'query') { %> @RequestParam(required = <%= param.required %>)<% } else if (param.in === 'body') { %> @Valid @RequestBody<% } %> <%= param.type %> <%= param.name %><%= index < endpoint.parameters.length - 1 ? ',' : '' %>
+        <% }); %>
+        <% } %>
+    ) {
+        log.debug("REST request to <%= endpoint.name %>: {}", <%= endpoint.parameters ? endpoint.parameters.find(p => p.in === 'body')?.name : 'null' %>);
+        // TODO: Implement custom endpoint logic
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    <% }); %>
+    <% } %>
+}

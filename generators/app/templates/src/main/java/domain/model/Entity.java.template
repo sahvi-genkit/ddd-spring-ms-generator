@@ -1,0 +1,95 @@
+package <%= base_package_name %>.domain.model;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Negative;
+import jakarta.validation.constraints.NegativeOrZero;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+public class <%= entity_name %> {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    <% fields.forEach(function(field) { %>
+    <% if (field.required) { %>
+    @NotNull
+    <% } %>
+    <% if (field.validations) { %>
+    <% field.validations.forEach(function(validation) { %>
+    <% if (validation.type === 'size') { %>
+    @Size(min = <%= validation.min %>, max = <%= validation.max %>)
+    <% } else if (validation.type === 'email') { %>
+    @Email
+    <% } else if (validation.type === 'pattern') { %>
+    @Pattern(regexp = "<%= validation.pattern %>")
+    <% } else if (validation.type === 'min') { %>
+    @Min(<%= validation.value %>)
+    <% } else if (validation.type === 'max') { %>
+    @Max(<%= validation.value %>)
+    <% } else if (validation.type === 'notBlank') { %>
+    @NotBlank
+    <% } else if (validation.type === 'notEmpty') { %>
+    @NotEmpty
+    <% } else if (validation.type === 'positive') { %>
+    @Positive
+    <% } else if (validation.type === 'positiveOrZero') { %>
+    @PositiveOrZero
+    <% } else if (validation.type === 'negative') { %>
+    @Negative
+    <% } else if (validation.type === 'negativeOrZero') { %>
+    @NegativeOrZero
+    <% } else if (validation.type === 'decimalMin') { %>
+    @DecimalMin("<%= validation.value %>")
+    <% } else if (validation.type === 'decimalMax') { %>
+    @DecimalMax("<%= validation.value %>")
+    <% } else if (validation.type === 'digits') { %>
+    @Digits(integer = <%= validation.integer %>, fraction = <%= validation.fraction %>)
+    <% } else if (validation.type === 'past') { %>
+    @Past
+    <% } else if (validation.type === 'pastOrPresent') { %>
+    @PastOrPresent
+    <% } else if (validation.type === 'future') { %>
+    @Future
+    <% } else if (validation.type === 'futureOrPresent') { %>
+    @FutureOrPresent
+    <% } %>
+    <% }); %>
+    <% } %>
+    @Column<% if (field.name !== field.name.toLowerCase()) { %>(name = "<%= field.name.toLowerCase() %>")<% } %>
+    private <%= field.type %> <%= field.name %>;
+
+    <% }); %>
+}

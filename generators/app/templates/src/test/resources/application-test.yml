@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: <%= project_name.toLowerCase().replace(/\s+/g, '-') %>-test
+  profiles:
+    active: test
+  jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+
+server:
+  port: 0  # Random port for tests
+  servlet:
+    context-path: ${SERVER_CONTEXT_PATH:<%= api_context_path %>}
+
+logging:
+  level:
+    root: WARN
+    <%= base_package_name %>: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Test client configurations
+<% if (clients && clients.length > 0) { %>
+clients:
+<% clients.forEach(function(client) { %>
+  <%= client.name.toLowerCase() %>:
+    base-url: http://localhost:${wiremock.server.port}
+    connection-timeout: 1000
+    read-timeout: 1000
+    max-retries: 0
+    retry-delay: 0
+<% }); %>
+<% } %>
+
+# WireMock configuration for testing external services
+wiremock:
+  server:
+    port: ${WIREMOCK_PORT:8089}
+    mappings-dir: classpath:wiremock/mappings
+    files-dir: classpath:wiremock/__files 

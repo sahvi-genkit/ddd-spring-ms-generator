@@ -1,0 +1,193 @@
+package <%= base_package_name %>.infrastructure.client;
+
+import <%= base_package_name %>.infrastructure.config.RestClientProperties;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.*;
+import org.springframework.web.client.RestTemplate;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(MockitoExtension.class)
+class <%= client_name %>ClientTest {
+
+    @Mock
+    private RestTemplate restTemplate;
+
+    private RestClientProperties properties;
+    private <%= client_name %>Client client;
+
+    @BeforeEach
+    void setUp() {
+        properties = new RestClientProperties();
+        properties.setBaseUrl("http://test-service");
+        client = new <%= client_name %>Client(restTemplate, properties);
+    }
+
+    <% endpoints.forEach(function(endpoint) { %>
+    <% if (endpoint.method === 'GET') { %>
+    @Test
+    void test<%= endpoint.name %>() {
+        // Arrange
+        <%= endpoint.responseType %> expectedResponse = new <%= endpoint.responseType %>();
+        ResponseEntity<<%= endpoint.responseType %>> responseEntity = new ResponseEntity<>(expectedResponse, HttpStatus.OK);
+        when(restTemplate.exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(<%= endpoint.responseType %>.class)
+        )).thenReturn(responseEntity);
+
+        // Act
+        <%= endpoint.responseType %> result = client.<%= endpoint.name %>();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(expectedResponse, result);
+        verify(restTemplate).exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(<%= endpoint.responseType %>.class)
+        );
+    }
+
+    @Test
+    void test<%= endpoint.name %>_WhenError() {
+        // Arrange
+        when(restTemplate.exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            eq(<%= endpoint.responseType %>.class)
+        )).thenThrow(new RuntimeException("Test error"));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> client.<%= endpoint.name %>());
+    }
+    <% } else if (endpoint.method === 'POST') { %>
+    @Test
+    void test<%= endpoint.name %>() {
+        // Arrange
+        <%= endpoint.requestType %> request = new <%= endpoint.requestType %>();
+        <%= endpoint.responseType %> expectedResponse = new <%= endpoint.responseType %>();
+        ResponseEntity<<%= endpoint.responseType %>> responseEntity = new ResponseEntity<>(expectedResponse, HttpStatus.OK);
+        when(restTemplate.exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(<%= endpoint.responseType %>.class)
+        )).thenReturn(responseEntity);
+
+        // Act
+        <%= endpoint.responseType %> result = client.<%= endpoint.name %>(request);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(expectedResponse, result);
+        verify(restTemplate).exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(<%= endpoint.responseType %>.class)
+        );
+    }
+
+    @Test
+    void test<%= endpoint.name %>_WhenError() {
+        // Arrange
+        <%= endpoint.requestType %> request = new <%= endpoint.requestType %>();
+        when(restTemplate.exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(<%= endpoint.responseType %>.class)
+        )).thenThrow(new RuntimeException("Test error"));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> client.<%= endpoint.name %>(request));
+    }
+    <% } else if (endpoint.method === 'PUT') { %>
+    @Test
+    void test<%= endpoint.name %>() {
+        // Arrange
+        <%= endpoint.requestType %> request = new <%= endpoint.requestType %>();
+        <%= endpoint.responseType %> expectedResponse = new <%= endpoint.responseType %>();
+        ResponseEntity<<%= endpoint.responseType %>> responseEntity = new ResponseEntity<>(expectedResponse, HttpStatus.OK);
+        when(restTemplate.exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.PUT),
+            any(HttpEntity.class),
+            eq(<%= endpoint.responseType %>.class)
+        )).thenReturn(responseEntity);
+
+        // Act
+        <%= endpoint.responseType %> result = client.<%= endpoint.name %>(request);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(expectedResponse, result);
+        verify(restTemplate).exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.PUT),
+            any(HttpEntity.class),
+            eq(<%= endpoint.responseType %>.class)
+        );
+    }
+
+    @Test
+    void test<%= endpoint.name %>_WhenError() {
+        // Arrange
+        <%= endpoint.requestType %> request = new <%= endpoint.requestType %>();
+        when(restTemplate.exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.PUT),
+            any(HttpEntity.class),
+            eq(<%= endpoint.responseType %>.class)
+        )).thenThrow(new RuntimeException("Test error"));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> client.<%= endpoint.name %>(request));
+    }
+    <% } else if (endpoint.method === 'DELETE') { %>
+    @Test
+    void test<%= endpoint.name %>() {
+        // Arrange
+        ResponseEntity<Void> responseEntity = new ResponseEntity<>(HttpStatus.OK);
+        when(restTemplate.exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.DELETE),
+            any(HttpEntity.class),
+            eq(Void.class)
+        )).thenReturn(responseEntity);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> client.<%= endpoint.name %>());
+        verify(restTemplate).exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.DELETE),
+            any(HttpEntity.class),
+            eq(Void.class)
+        );
+    }
+
+    @Test
+    void test<%= endpoint.name %>_WhenError() {
+        // Arrange
+        when(restTemplate.exchange(
+            eq("http://test-service<%= endpoint.path %>"),
+            eq(HttpMethod.DELETE),
+            any(HttpEntity.class),
+            eq(Void.class)
+        )).thenThrow(new RuntimeException("Test error"));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> client.<%= endpoint.name %>());
+    }
+    <% } %>
+    <% }); %>
+} 

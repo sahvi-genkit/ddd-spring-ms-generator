@@ -1,0 +1,195 @@
+package <%= base_package_name %>.application.interfaces;
+
+import <%= base_package_name %>.domain.model.<%= entity_name %>;
+import <%= base_package_name %>.application.service.<%= entity_name %>Service;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
+import jakarta.validation.Valid;
+import java.util.List;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * REST controller for managing <%= entity_name %>.
+ */
+@RestController
+@RequestMapping("<%= api_context_path %>/<%= entity_name.toLowerCase() %>s")
+@Tag(name = "<%= entity_name %>", description = "APIs for managing <%= entity_name.toLowerCase() %>s")
+@Validated
+public class <%= entity_name %>Controller {
+
+    private final Logger log = LoggerFactory.getLogger(<%= entity_name %>Controller.class);
+    private final <%= entity_name %>Service <%= entity_name.toLowerCase() %>Service;
+
+    public <%= entity_name %>Controller(<%= entity_name %>Service <%= entity_name.toLowerCase() %>Service) {
+        this.<%= entity_name.toLowerCase() %>Service = <%= entity_name.toLowerCase() %>Service;
+    }
+
+    <% if (crudOperations && crudOperations.enabled) { %>
+    /**
+     * {@code GET /<%= entity_name.toLowerCase() %>s} : get all <%= entity_name.toLowerCase() %>s.
+     *
+     * @param pageable the pagination information.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of <%= entity_name.toLowerCase() %>s in body.
+     */
+    @Operation(summary = "Get all <%= entity_name.toLowerCase() %>s", description = "Retrieves a list of all <%= entity_name.toLowerCase() %>s")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved the list of <%= entity_name.toLowerCase() %>s",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = <%= entity_name %>.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping
+    public ResponseEntity<Page<<%= entity_name %>>> getAll<%= entity_name %>s(Pageable pageable) {
+        log.debug("REST request to get a page of <%= entity_name %>s");
+        Page<<%= entity_name %>> page = <%= entity_name.toLowerCase() %>Service.findAll(pageable);
+        return ResponseEntity.ok().body(page);
+    }
+
+    /**
+     * {@code GET /<%= entity_name.toLowerCase() %>s/:id} : get the "id" <%= entity_name.toLowerCase() %>.
+     *
+     * @param id the id of the <%= entity_name.toLowerCase() %> to retrieve.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the <%= entity_name.toLowerCase() %>, or with status {@code 404 (Not Found)}.
+     */
+    @Operation(summary = "Get <%= entity_name.toLowerCase() %> by ID", description = "Retrieves a <%= entity_name.toLowerCase() %> by its ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved the <%= entity_name.toLowerCase() %>",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = <%= entity_name %>.class))),
+        @ApiResponse(responseCode = "404", description = "<%= entity_name %> not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<<%= entity_name %>> get<%= entity_name %>ById(
+            @Parameter(description = "ID of the <%= entity_name.toLowerCase() %> to retrieve") @PathVariable Long id) {
+        log.debug("REST request to get <%= entity_name %> : {}", id);
+        return <%= entity_name.toLowerCase() %>Service.findById(id)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * {@code POST /<%= entity_name.toLowerCase() %>s} : Create a new <%= entity_name.toLowerCase() %>.
+     *
+     * @param <%= entity_name.toLowerCase() %> the <%= entity_name.toLowerCase() %> to create.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new <%= entity_name.toLowerCase() %>, or with status {@code 400 (Bad Request)} if the <%= entity_name.toLowerCase() %> has already an ID.
+     */
+    @Operation(summary = "Create new <%= entity_name.toLowerCase() %>", description = "Creates a new <%= entity_name.toLowerCase() %>")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Successfully created the <%= entity_name.toLowerCase() %>",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = <%= entity_name %>.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid input"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping
+    public ResponseEntity<<%= entity_name %>> create<%= entity_name %>(
+            @Parameter(description = "<%= entity_name %> to create") @Valid @RequestBody <%= entity_name %> <%= entity_name.toLowerCase() %>) {
+        log.debug("REST request to save <%= entity_name %> : {}", <%= entity_name.toLowerCase() %>);
+        if (<%= entity_name.toLowerCase() %>.getId() != null) {
+            return ResponseEntity.badRequest().build();
+        }
+        <%= entity_name %> result = <%= entity_name.toLowerCase() %>Service.save(<%= entity_name.toLowerCase() %>);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
+    /**
+     * {@code PUT /<%= entity_name.toLowerCase() %>s/:id} : Updates an existing <%= entity_name.toLowerCase() %>.
+     *
+     * @param id the id of the <%= entity_name.toLowerCase() %> to save.
+     * @param <%= entity_name.toLowerCase() %> the <%= entity_name.toLowerCase() %> to update.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated <%= entity_name.toLowerCase() %>,
+     * or with status {@code 400 (Bad Request)} if the <%= entity_name.toLowerCase() %> is not valid,
+     * or with status {@code 404 (Not Found)} if the <%= entity_name.toLowerCase() %> is not found.
+     */
+    @Operation(summary = "Update <%= entity_name.toLowerCase() %>", description = "Updates an existing <%= entity_name.toLowerCase() %> by its ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully updated the <%= entity_name.toLowerCase() %>",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = <%= entity_name %>.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid input"),
+        @ApiResponse(responseCode = "404", description = "<%= entity_name %> not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<<%= entity_name %>> update<%= entity_name %>(
+            @Parameter(description = "ID of the <%= entity_name.toLowerCase() %> to update") @PathVariable Long id,
+            @Parameter(description = "Updated <%= entity_name.toLowerCase() %> data") @Valid @RequestBody <%= entity_name %> <%= entity_name.toLowerCase() %>) {
+        log.debug("REST request to update <%= entity_name %> : {}", id);
+        if (<%= entity_name.toLowerCase() %>.getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (!<%= entity_name.toLowerCase() %>Service.findById(id).isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        <%= entity_name %> result = <%= entity_name.toLowerCase() %>Service.save(<%= entity_name.toLowerCase() %>);
+        return ResponseEntity.ok().body(result);
+    }
+
+    /**
+     * {@code DELETE /<%= entity_name.toLowerCase() %>s/:id} : delete the "id" <%= entity_name.toLowerCase() %>.
+     *
+     * @param id the id of the <%= entity_name.toLowerCase() %> to delete.
+     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
+     */
+    @Operation(summary = "Delete <%= entity_name.toLowerCase() %>", description = "Deletes a <%= entity_name.toLowerCase() %> by its ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Successfully deleted the <%= entity_name.toLowerCase() %>"),
+        @ApiResponse(responseCode = "404", description = "<%= entity_name %> not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete<%= entity_name %>(@Parameter(description = "ID of the <%= entity_name.toLowerCase() %> to delete") @PathVariable Long id) {
+        log.debug("REST request to delete <%= entity_name %> : {}", id);
+        if (!<%= entity_name.toLowerCase() %>Service.findById(id).isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        <%= entity_name.toLowerCase() %>Service.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+    <% } %>
+
+    <% if (endpoints && endpoints.length > 0) { %>
+        <% endpoints.forEach(endpoint => { %>
+        @Operation(summary = "<%= endpoint.summary %>", description = "<%= endpoint.description %>")
+        @ApiResponses(value = {
+            <% if (endpoint.responses) { %>
+            <% endpoint.responses.forEach((response, index) => { %>
+            @ApiResponse(responseCode = "<%= response.code %>", description = "<%= response.description %>"<% if (response.content && response.content['application/json']) { %>,
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = <%=
+                    response.content['application/json'].schema.type === 'array' ? 'List.class' :
+                    response.content['application/json'].schema.$ref ?
+                        response.content['application/json'].schema.$ref.split('/').pop() + '.class' :
+                        entity_name + '.class' %>))<% } %>)<%= index < endpoint.responses.length - 1 ? ',' : '' %>
+            <% }); %>
+            <% } %>
+        })
+        @<%= endpoint.method %>Mapping("<%- endpoint.path %>")
+        public <%- endpoint.returnType %> <%= endpoint.name %>(
+            <% if (endpoint.parameters && endpoint.parameters.length > 0) { %>
+            <% endpoint.parameters.forEach((param, index) => { %>
+            @Parameter(description = "<%= param.description %>")<% if (param.in === 'path') { %> @PathVariable<% } else if (param.in === 'query') { %> @RequestParam(required = <%= param.required %>)<% } else if (param.in === 'body') { %> @Valid @RequestBody<% } %> <%= param.type %> <%= param.name %><%= index < endpoint.parameters.length - 1 ? ',' : '' %>
+            <% }); %>
+            <% } %>
+        ) {
+            log.debug("REST request to <%= endpoint.name %>");
+            // TODO: Implement custom endpoint logic
+            throw new UnsupportedOperationException("Not implemented yet");
+        }
+
+        <% }); %>
+        <% } %>
+}

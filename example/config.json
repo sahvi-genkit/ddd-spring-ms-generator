@@ -1,0 +1,1029 @@
+{
+  "projectName": "Order Service",
+  "projectDescription": "Microservice for managing orders",
+  "projectArtifactoryId": "order-service",
+  "basePackageName": "com.example.orders",
+  "apiContextPath": "/api/v1",
+  "emailContact": "dev@example.com",
+  "entities": [
+    {
+      "name": "Orders",
+      "fields": [
+        {
+          "type": "String",
+          "name": "orderNumber",
+          "required": true,
+          "description": "Unique order number",
+          "validations": [
+            {
+              "type": "NotBlank",
+              "message": "Order number is required"
+            },
+            {
+              "type": "Size",
+              "min": 5,
+              "max": 20,
+              "message": "Order number must be between 5 and 20 characters"
+            },
+            {
+              "type": "Pattern",
+              "regexp": "^[A-Z0-9-]+$",
+              "message": "Order number must contain only uppercase letters, numbers, and hyphens"
+            }
+          ]
+        },
+        {
+          "type": "LocalDateTime",
+          "name": "orderDate",
+          "required": true,
+          "description": "Date and time when the order was placed",
+          "validations": [
+            {
+              "type": "NotNull",
+              "message": "Order date is required"
+            },
+            {
+              "type": "PastOrPresent",
+              "message": "Order date cannot be in the future"
+            }
+          ]
+        },
+        {
+          "type": "BigDecimal",
+          "name": "totalAmount",
+          "required": true,
+          "description": "Total order amount",
+          "validations": [
+            {
+              "type": "NotNull",
+              "message": "Total amount is required"
+            },
+            {
+              "type": "DecimalMin",
+              "value": "0.01",
+              "message": "Total amount must be greater than 0"
+            },
+            {
+              "type": "Digits",
+              "integer": 10,
+              "fraction": 2,
+              "message": "Total amount must have at most 10 digits before decimal and 2 after"
+            }
+          ]
+        },
+        {
+          "type": "String",
+          "name": "status",
+          "required": true,
+          "description": "Order status",
+          "validations": [
+            {
+              "type": "NotBlank",
+              "message": "Status is required"
+            },
+            {
+              "type": "Pattern",
+              "regexp": "^(PENDING|CONFIRMED|SHIPPED|DELIVERED|CANCELLED)$",
+              "message": "Status must be one of: PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED"
+            }
+          ]
+        },
+        {
+          "type": "String",
+          "name": "customerId",
+          "required": true,
+          "description": "Customer identifier",
+          "validations": [
+            {
+              "type": "NotBlank",
+              "message": "Customer ID is required"
+            },
+            {
+              "type": "Pattern",
+              "regexp": "^[A-Z0-9-]+$",
+              "message": "Customer ID must contain only uppercase letters, numbers, and hyphens"
+            }
+          ]
+        }
+      ],
+      "crudOperations": {
+        "enabled": true,
+        "operations": {
+          "getAll": {
+            "enabled": true,
+            "path": "",
+            "summary": "Get all orders",
+            "description": "Retrieves a paginated list of all orders with optional filtering",
+            "responses": [
+              {
+                "code": "200",
+                "description": "Successfully retrieved orders",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Order"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "code": "500",
+                "description": "Internal server error"
+              }
+            ]
+          },
+          "getById": {
+            "enabled": true,
+            "path": "/{id}",
+            "summary": "Get order by ID",
+            "description": "Retrieves a specific order by its ID",
+            "responses": [
+              {
+                "code": "200",
+                "description": "Successfully retrieved the order",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              },
+              {
+                "code": "404",
+                "description": "Order not found"
+              },
+              {
+                "code": "500",
+                "description": "Internal server error"
+              }
+            ]
+          },
+          "create": {
+            "enabled": true,
+            "path": "",
+            "summary": "Create new order",
+            "description": "Creates a new order with validation",
+            "responses": [
+              {
+                "code": "201",
+                "description": "Order created successfully",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              },
+              {
+                "code": "400",
+                "description": "Invalid input data"
+              },
+              {
+                "code": "409",
+                "description": "Order number already exists"
+              },
+              {
+                "code": "500",
+                "description": "Internal server error"
+              }
+            ]
+          },
+          "update": {
+            "enabled": true,
+            "path": "/{id}",
+            "summary": "Update order",
+            "description": "Updates an existing order by its ID",
+            "responses": [
+              {
+                "code": "200",
+                "description": "Order updated successfully",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              },
+              {
+                "code": "400",
+                "description": "Invalid input data"
+              },
+              {
+                "code": "404",
+                "description": "Order not found"
+              },
+              {
+                "code": "500",
+                "description": "Internal server error"
+              }
+            ]
+          },
+          "delete": {
+            "enabled": true,
+            "path": "/{id}",
+            "summary": "Delete order",
+            "description": "Deletes an order by its ID",
+            "responses": [
+              {
+                "code": "204",
+                "description": "Order deleted successfully"
+              },
+              {
+                "code": "404",
+                "description": "Order not found"
+              },
+              {
+                "code": "500",
+                "description": "Internal server error"
+              }
+            ]
+          }
+        }
+      },
+      "endpoints": [
+        {
+          "name": "searchOrders",
+          "method": "Get",
+          "path": "/search",
+          "summary": "Search orders",
+          "description": "Search orders by various criteria with pagination and sorting",
+          "returnType": "ResponseEntity<Page<Orders>>",
+          "parameters": [
+            {
+              "name": "customerId",
+              "type": "String",
+              "in": "query",
+              "required": false,
+              "description": "Filter by customer ID",
+              "validations": [
+                {
+                  "type": "Pattern",
+                  "regexp": "^[A-Z0-9-]+$",
+                  "message": "Customer ID must contain only uppercase letters, numbers, and hyphens"
+                }
+              ]
+            },
+            {
+              "name": "status",
+              "type": "String",
+              "in": "query",
+              "required": false,
+              "description": "Filter by order status",
+              "validations": [
+                {
+                  "type": "Pattern",
+                  "regexp": "^(PENDING|CONFIRMED|SHIPPED|DELIVERED|CANCELLED)$",
+                  "message": "Status must be one of: PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED"
+                }
+              ]
+            },
+            {
+              "name": "startDate",
+              "type": "LocalDateTime",
+              "in": "query",
+              "required": false,
+              "description": "Filter orders from this date (inclusive)",
+              "validations": [
+                {
+                  "type": "PastOrPresent",
+                  "message": "Start date cannot be in the future"
+                }
+              ]
+            },
+            {
+              "name": "endDate",
+              "type": "LocalDateTime",
+              "in": "query",
+              "required": false,
+              "description": "Filter orders until this date (inclusive)",
+              "validations": [
+                {
+                  "type": "PastOrPresent",
+                  "message": "End date cannot be in the future"
+                }
+              ]
+            },
+            {
+              "name": "page",
+              "type": "Integer",
+              "in": "query",
+              "required": false,
+              "description": "Page number (0-based)",
+              "default": 0,
+              "validations": [
+                {
+                  "type": "Min",
+                  "value": 0,
+                  "message": "Page number must be 0 or greater"
+                }
+              ]
+            },
+            {
+              "name": "size",
+              "type": "Integer",
+              "in": "query",
+              "required": false,
+              "description": "Number of items per page",
+              "default": 20,
+              "validations": [
+                {
+                  "type": "Min",
+                  "value": 1,
+                  "message": "Page size must be at least 1"
+                },
+                {
+                  "type": "Max",
+                  "value": 100,
+                  "message": "Page size cannot exceed 100"
+                }
+              ]
+            },
+            {
+              "name": "sort",
+              "type": "String",
+              "in": "query",
+              "required": false,
+              "description": "Sort criteria (e.g., 'orderDate,desc')",
+              "validations": [
+                {
+                  "type": "Pattern",
+                  "regexp": "^[a-zA-Z]+(,[a-zA-Z]+)*(,asc|,desc)?$",
+                  "message": "Sort must be in format: field1,field2,desc"
+                }
+              ]
+            }
+          ],
+          "responses": [
+            {
+              "code": "200",
+              "description": "Successfully retrieved orders",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "content": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Order"
+                        }
+                      },
+                      "pageable": {
+                        "$ref": "#/components/schemas/Pageable"
+                      },
+                      "totalElements": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "totalPages": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "last": {
+                        "type": "boolean"
+                      },
+                      "size": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "number": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "sort": {
+                        "$ref": "#/components/schemas/Sort"
+                      },
+                      "numberOfElements": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "first": {
+                        "type": "boolean"
+                      },
+                      "empty": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "code": "400",
+              "description": "Invalid search criteria",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            {
+              "code": "500",
+              "description": "Internal server error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          ],
+          "security": {
+            "required": true,
+            "roles": ["ORDER_READ"]
+          }
+        },
+        {
+          "name": "getOrdersByCustomer",
+          "method": "Get",
+          "path": "/customer/{customerId}",
+          "summary": "Get orders by customer",
+          "description": "Retrieves all orders for a specific customer",
+          "returnType": "List<Orders>",
+          "parameters": [
+            {
+              "name": "customerId",
+              "type": "String",
+              "in": "path",
+              "required": true,
+              "description": "Customer ID"
+            }
+          ],
+          "responses": [
+            {
+              "code": "200",
+              "description": "Successfully retrieved customer orders",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "code": "404",
+              "description": "Customer not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "createOrder",
+          "method": "Post",
+          "path": "/create",
+          "summary": "Create new order",
+          "description": "Creates a new order with validation and inventory check",
+          "returnType": "Orders",
+          "parameters": [
+            {
+              "name": "order",
+              "type": "Orders",
+              "in": "body",
+              "required": true,
+              "description": "Order details"
+            }
+          ],
+          "responses": [
+            {
+              "code": "201",
+              "description": "Order created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Orders"
+                  }
+                }
+              }
+            },
+            {
+              "code": "400",
+              "description": "Invalid order data",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            {
+              "code": "409",
+              "description": "Order number already exists",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "security": {
+        "default": {
+          "required": true,
+          "roles": ["ORDER_ADMIN"]
+        },
+        "operations": {
+          "getAll": {
+            "roles": ["ORDER_READ"]
+          },
+          "getById": {
+            "roles": ["ORDER_READ"]
+          },
+          "create": {
+            "roles": ["ORDER_CREATE"]
+          },
+          "update": {
+            "roles": ["ORDER_UPDATE"]
+          },
+          "delete": {
+            "roles": ["ORDER_DELETE"]
+          }
+        }
+      }
+    },
+    {
+      "name": "OrderItem",
+      "fields": [
+        {
+          "type": "String",
+          "name": "productId",
+          "required": true
+        },
+        {
+          "type": "Integer",
+          "name": "quantity",
+          "required": true,
+          "validations": ["Min(1)"]
+        }
+      ],
+      "crudOperations": {
+        "enabled": false
+      }
+    }
+  ],
+  "clients": [
+    {
+      "name": "Payment",
+      "baseUrl": "http://payment-service:8080",
+      "connectTimeout": 5000,
+      "readTimeout": 5000,
+      "requestTypes": {
+        "PaymentRequest": {
+          "fields": [
+            {
+              "type": "String",
+              "name": "orderId",
+              "required": true,
+              "description": "Order identifier",
+              "validations": [
+                {
+                  "type": "NotBlank",
+                  "message": "Order ID is required"
+                },
+                {
+                  "type": "Pattern",
+                  "regexp": "^[A-Z0-9-]+$",
+                  "message": "Order ID must contain only uppercase letters, numbers, and hyphens"
+                }
+              ]
+            },
+            {
+              "type": "BigDecimal",
+              "name": "amount",
+              "required": true,
+              "description": "Payment amount",
+              "validations": [
+                {
+                  "type": "NotNull",
+                  "message": "Amount is required"
+                },
+                {
+                  "type": "DecimalMin",
+                  "value": "0.01",
+                  "message": "Amount must be greater than 0"
+                },
+                {
+                  "type": "Digits",
+                  "integer": 10,
+                  "fraction": 2,
+                  "message": "Amount must have at most 10 digits before decimal and 2 after"
+                }
+              ]
+            },
+            {
+              "type": "String",
+              "name": "currency",
+              "required": true,
+              "description": "Payment currency",
+              "validations": [
+                {
+                  "type": "NotBlank",
+                  "message": "Currency is required"
+                },
+                {
+                  "type": "Pattern",
+                  "regexp": "^[A-Z]{3}$",
+                  "message": "Currency must be a 3-letter code"
+                }
+              ]
+            },
+            {
+              "type": "String",
+              "name": "paymentMethod",
+              "required": true,
+              "description": "Payment method",
+              "validations": [
+                {
+                  "type": "NotBlank",
+                  "message": "Payment method is required"
+                },
+                {
+                  "type": "Pattern",
+                  "regexp": "^(CREDIT_CARD|DEBIT_CARD|BANK_TRANSFER|WALLET)$",
+                  "message": "Invalid payment method"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "responseTypes": {
+        "PaymentResponse": {
+          "fields": [
+            {
+              "type": "String",
+              "name": "paymentId",
+              "required": true,
+              "description": "Payment identifier"
+            },
+            {
+              "type": "String",
+              "name": "status",
+              "required": true,
+              "description": "Payment status",
+              "validations": [
+                {
+                  "type": "Pattern",
+                  "regexp": "^(SUCCESS|FAILED|PENDING|REFUNDED)$",
+                  "message": "Invalid payment status"
+                }
+              ]
+            },
+            {
+              "type": "LocalDateTime",
+              "name": "processedAt",
+              "required": true,
+              "description": "Payment processing timestamp"
+            },
+            {
+              "type": "String",
+              "name": "transactionReference",
+              "required": false,
+              "description": "External payment reference"
+            }
+          ]
+        },
+        "PaymentStatus": {
+          "fields": [
+            {
+              "type": "String",
+              "name": "paymentId",
+              "required": true,
+              "description": "Payment identifier"
+            },
+            {
+              "type": "String",
+              "name": "status",
+              "required": true,
+              "description": "Current payment status",
+              "validations": [
+                {
+                  "type": "Pattern",
+                  "regexp": "^(SUCCESS|FAILED|PENDING|REFUNDED)$",
+                  "message": "Invalid payment status"
+                }
+              ]
+            },
+            {
+              "type": "String",
+              "name": "message",
+              "required": false,
+              "description": "Additional status information"
+            },
+            {
+              "type": "LocalDateTime",
+              "name": "lastUpdated",
+              "required": true,
+              "description": "Last status update timestamp"
+            }
+          ]
+        }
+      },
+      "endpoints": [
+        {
+          "name": "processPayment",
+          "path": "/payments",
+          "method": "POST",
+          "requestType": "PaymentRequest",
+          "responseType": "PaymentResponse",
+          "retryable": true,
+          "timeout": 10000,
+          "description": "Process a payment for an order",
+          "responses": [
+            {
+              "code": "200",
+              "description": "Payment processed successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PaymentResponse"
+                  }
+                }
+              }
+            },
+            {
+              "code": "400",
+              "description": "Invalid payment request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            {
+              "code": "409",
+              "description": "Payment already exists",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            {
+              "code": "500",
+              "description": "Payment service error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "getPaymentStatus",
+          "path": "/payments/{paymentId}",
+          "method": "GET",
+          "responseType": "PaymentStatus",
+          "retryable": true,
+          "timeout": 5000,
+          "description": "Get the status of a payment",
+          "responses": [
+            {
+              "code": "200",
+              "description": "Payment status retrieved successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PaymentStatus"
+                  }
+                }
+              }
+            },
+            {
+              "code": "404",
+              "description": "Payment not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            {
+              "code": "500",
+              "description": "Payment service error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "baseUrl": "http://inventory-service:8080",
+      "connectTimeout": 3000,
+      "readTimeout": 3000,
+      "requestTypes": {
+        "InventoryCheckRequest": {
+          "fields": [
+            {
+              "type": "String",
+              "name": "productId",
+              "required": true,
+              "description": "Product identifier",
+              "validations": [
+                {
+                  "type": "NotBlank",
+                  "message": "Product ID is required"
+                }
+              ]
+            },
+            {
+              "type": "Integer",
+              "name": "quantity",
+              "required": true,
+              "description": "Requested quantity",
+              "validations": [
+                {
+                  "type": "Min",
+                  "value": 1,
+                  "message": "Quantity must be at least 1"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "responseTypes": {
+        "InventoryCheckResponse": {
+          "fields": [
+            {
+              "type": "String",
+              "name": "productId",
+              "required": true,
+              "description": "Product identifier"
+            },
+            {
+              "type": "Boolean",
+              "name": "available",
+              "required": true,
+              "description": "Whether the product is available"
+            },
+            {
+              "type": "Integer",
+              "name": "availableQuantity",
+              "required": true,
+              "description": "Available quantity"
+            },
+            {
+              "type": "String",
+              "name": "location",
+              "required": false,
+              "description": "Warehouse location"
+            }
+          ]
+        }
+      },
+      "endpoints": [
+        {
+          "name": "checkInventory",
+          "path": "/inventory/check",
+          "method": "POST",
+          "requestType": "InventoryCheckRequest",
+          "responseType": "InventoryCheckResponse",
+          "retryable": true,
+          "timeout": 3000,
+          "description": "Check product availability",
+          "responses": [
+            {
+              "code": "200",
+              "description": "Inventory check completed successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/InventoryCheckResponse"
+                  }
+                }
+              }
+            },
+            {
+              "code": "400",
+              "description": "Invalid request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            {
+              "code": "404",
+              "description": "Product not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            {
+              "code": "500",
+              "description": "Inventory service error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Pageable": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/Sort"
+          }
+        }
+      },
+      "Sort": {
+        "type": "object",
+        "properties": {
+          "sorted": {
+            "type": "boolean"
+          },
+          "unsorted": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

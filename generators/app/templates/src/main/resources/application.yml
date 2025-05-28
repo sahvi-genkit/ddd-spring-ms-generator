@@ -1,0 +1,89 @@
+spring:
+  application:
+    name: <%= project_name.toLowerCase().replace(/\s+/g, '-') %>
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+  datasource:
+    url: jdbc:h2:mem:<%= project_artifactory_id %>db
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${SERVER_CONTEXT_PATH:<%= api_context_path %>}
+  tomcat:
+    max-threads: 200
+    min-spare-threads: 10
+    max-connections: 10000
+    accept-count: 100
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    root: INFO
+    <%= base_package_name %>: ${LOG_LEVEL:DEBUG}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/${spring.application.name}.log
+    max-size: 10MB
+    max-history: 30
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    filter: true
+
+# Client configurations
+<% if (clients && clients.length > 0) { %>
+clients:
+<% clients.forEach(function(client) { %>
+  <%= client.name.toLowerCase() %>:
+    base-url: ${<%= client.name.toUpperCase() %>_BASE_URL:http://localhost:8080}
+    connection-timeout: ${<%= client.name.toUpperCase() %>_CONNECTION_TIMEOUT:5000}
+    read-timeout: ${<%= client.name.toUpperCase() %>_READ_TIMEOUT:5000}
+    max-retries: ${<%= client.name.toUpperCase() %>_MAX_RETRIES:3}
+    retry-delay: ${<%= client.name.toUpperCase() %>_RETRY_DELAY:1000}
+<% }); %>
+<% } %> 

@@ -1,0 +1,129 @@
+package <%= base_package_name %>.application.service;
+
+import <%= base_package_name %>.domain.model.<%= entity_name %>;
+import <%= base_package_name %>.domain.repository.<%= entity_name %>Repository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for {@link <%= entity_name %>Service}.
+ */
+@ExtendWith(MockitoExtension.class)
+class <%= entity_name %>ServiceTest {
+
+    @Mock
+    private <%= entity_name %>Repository <%= entity_name.toLowerCase() %>Repository;
+
+    @InjectMocks
+    private <%= entity_name %>ServiceImpl <%= entity_name.toLowerCase() %>Service;
+
+    private <%= entity_name %> <%= entity_name.toLowerCase() %>;
+
+    @BeforeEach
+    void setUp() {
+        <%= entity_name.toLowerCase() %> = new <%= entity_name %>();
+        // Set up your test entity with required fields
+        // <%= entity_name.toLowerCase() %>.setId(1L);
+        // <%= entity_name.toLowerCase() %>.setName("Test <%= entity_name %>");
+    }
+
+    @Test
+    void shouldSave<%= entity_name %>() {
+        // given
+        when(<%= entity_name.toLowerCase() %>Repository.save(any(<%= entity_name %>.class))).thenReturn(<%= entity_name.toLowerCase() %>);
+
+        // when
+        <%= entity_name %> result = <%= entity_name.toLowerCase() %>Service.save(<%= entity_name.toLowerCase() %>);
+
+        // then
+        assertThat(result).isNotNull();
+        verify(<%= entity_name.toLowerCase() %>Repository).save(<%= entity_name.toLowerCase() %>);
+    }
+
+    @Test
+    void shouldFindAll<%= entity_name %>s() {
+        // given
+        List<<%= entity_name %>> <%= entity_name.toLowerCase() %>List = Arrays.asList(<%= entity_name.toLowerCase() %>);
+        when(<%= entity_name.toLowerCase() %>Repository.findAll()).thenReturn(<%= entity_name.toLowerCase() %>List);
+
+        // when
+        List<<%= entity_name %>> result = <%= entity_name.toLowerCase() %>Service.findAll();
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(1);
+        verify(<%= entity_name.toLowerCase() %>Repository).findAll();
+    }
+
+    @Test
+    void shouldFindAll<%= entity_name %>sWithPagination() {
+        // given
+        Pageable pageable = PageRequest.of(0, 10);
+        List<<%= entity_name %>> <%= entity_name.toLowerCase() %>List = Arrays.asList(<%= entity_name.toLowerCase() %>);
+        Page<<%= entity_name %>> <%= entity_name.toLowerCase() %>Page = new PageImpl<>(<%= entity_name.toLowerCase() %>List, pageable, <%= entity_name.toLowerCase() %>List.size());
+        when(<%= entity_name.toLowerCase() %>Repository.findAll(any(Pageable.class))).thenReturn(<%= entity_name.toLowerCase() %>Page);
+
+        // when
+        Page<<%= entity_name %>> result = <%= entity_name.toLowerCase() %>Service.findAll(pageable);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        verify(<%= entity_name.toLowerCase() %>Repository).findAll(pageable);
+    }
+
+    @Test
+    void shouldFind<%= entity_name %>ById() {
+        // given
+        when(<%= entity_name.toLowerCase() %>Repository.findById(1L)).thenReturn(Optional.of(<%= entity_name.toLowerCase() %>));
+
+        // when
+        Optional<<%= entity_name %>> result = <%= entity_name.toLowerCase() %>Service.findOne(1L);
+
+        // then
+        assertThat(result).isPresent();
+        assertThat(result.get()).isEqualTo(<%= entity_name.toLowerCase() %>);
+        verify(<%= entity_name.toLowerCase() %>Repository).findById(1L);
+    }
+
+    @Test
+    void shouldReturnEmptyWhen<%= entity_name %>NotFound() {
+        // given
+        when(<%= entity_name.toLowerCase() %>Repository.findById(1L)).thenReturn(Optional.empty());
+
+        // when
+        Optional<<%= entity_name %>> result = <%= entity_name.toLowerCase() %>Service.findOne(1L);
+
+        // then
+        assertThat(result).isEmpty();
+        verify(<%= entity_name.toLowerCase() %>Repository).findById(1L);
+    }
+
+    @Test
+    void shouldDelete<%= entity_name %>() {
+        // given
+        doNothing().when(<%= entity_name.toLowerCase() %>Repository).deleteById(1L);
+
+        // when
+        <%= entity_name.toLowerCase() %>Service.delete(1L);
+
+        // then
+        verify(<%= entity_name.toLowerCase() %>Repository).deleteById(1L);
+    }
+} 
