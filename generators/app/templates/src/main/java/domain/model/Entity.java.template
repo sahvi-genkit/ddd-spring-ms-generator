@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Email;
@@ -33,63 +34,62 @@ import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.persistence.Table;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class <%= entity_name %> {
+@Table(name = "<%= entity.tableName %>")
+public class <%= entity.name %> {
+    <% if (!entity.fields.some(f => f.type === 'ValueObject' && f.name === 'id')) { %>
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    <% } %>
 
     <% fields.forEach(function(field) { %>
+    <% if (field.type === 'ValueObject') { %>
+    @Embedded
+    <% if (field.required) { %>
+    @NotNull(message = "<%= field.description %> is required")
+    <% } %>
+    private <%= field.valueObject %> <%= field.name %>;
+    <% } else { %>
     <% if (field.required) { %>
     @NotNull
     <% } %>
     <% if (field.validations) { %>
     <% field.validations.forEach(function(validation) { %>
-    <% if (validation.type === 'size') { %>
-    @Size(min = <%= validation.min %>, max = <%= validation.max %>)
-    <% } else if (validation.type === 'email') { %>
-    @Email
-    <% } else if (validation.type === 'pattern') { %>
-    @Pattern(regexp = "<%= validation.pattern %>")
-    <% } else if (validation.type === 'min') { %>
-    @Min(<%= validation.value %>)
-    <% } else if (validation.type === 'max') { %>
-    @Max(<%= validation.value %>)
-    <% } else if (validation.type === 'notBlank') { %>
-    @NotBlank
-    <% } else if (validation.type === 'notEmpty') { %>
-    @NotEmpty
-    <% } else if (validation.type === 'positive') { %>
-    @Positive
-    <% } else if (validation.type === 'positiveOrZero') { %>
-    @PositiveOrZero
-    <% } else if (validation.type === 'negative') { %>
-    @Negative
-    <% } else if (validation.type === 'negativeOrZero') { %>
-    @NegativeOrZero
-    <% } else if (validation.type === 'decimalMin') { %>
-    @DecimalMin("<%= validation.value %>")
-    <% } else if (validation.type === 'decimalMax') { %>
-    @DecimalMax("<%= validation.value %>")
-    <% } else if (validation.type === 'digits') { %>
-    @Digits(integer = <%= validation.integer %>, fraction = <%= validation.fraction %>)
-    <% } else if (validation.type === 'past') { %>
-    @Past
-    <% } else if (validation.type === 'pastOrPresent') { %>
-    @PastOrPresent
-    <% } else if (validation.type === 'future') { %>
-    @Future
-    <% } else if (validation.type === 'futureOrPresent') { %>
-    @FutureOrPresent
+    <% if (validation.type === 'NotBlank') { %>
+    @NotBlank(message = "<%= validation.message %>")
+    <% } else if (validation.type === 'Size') { %>
+    @Size(min = <%= validation.min %>, max = <%= validation.max %>, message = "<%= validation.message %>")
+    <% } else if (validation.type === 'Pattern') { %>
+    @Pattern(regexp = "<%= validation.regexp %>", message = "<%= validation.message %>")
+    <% } else if (validation.type === 'Min') { %>
+    @Min(value = <%= validation.value %>, message = "<%= validation.message %>")
+    <% } else if (validation.type === 'Max') { %>
+    @Max(value = <%= validation.value %>, message = "<%= validation.message %>")
+    <% } else if (validation.type === 'DecimalMin') { %>
+    @DecimalMin(value = "<%= validation.value %>", message = "<%= validation.message %>")
+    <% } else if (validation.type === 'DecimalMax') { %>
+    @DecimalMax(value = "<%= validation.value %>", message = "<%= validation.message %>")
+    <% } else if (validation.type === 'Digits') { %>
+    @Digits(integer = <%= validation.integer %>, fraction = <%= validation.fraction %>, message = "<%= validation.message %>")
+    <% } else if (validation.type === 'Past') { %>
+    @Past(message = "<%= validation.message %>")
+    <% } else if (validation.type === 'PastOrPresent') { %>
+    @PastOrPresent(message = "<%= validation.message %>")
+    <% } else if (validation.type === 'Future') { %>
+    @Future(message = "<%= validation.message %>")
+    <% } else if (validation.type === 'FutureOrPresent') { %>
+    @FutureOrPresent(message = "<%= validation.message %>")
     <% } %>
     <% }); %>
     <% } %>
-    @Column<% if (field.name !== field.name.toLowerCase()) { %>(name = "<%= field.name.toLowerCase() %>")<% } %>
+    @Column<% if (field.name !== field.name.toLowerCase()) { %>(name = "<%= field.name.toLowerCase() %>")<% } %><% if (field.unique) { %>(unique = true)<% } %>
     private <%= field.type %> <%= field.name %>;
-
+    <% } %>
     <% }); %>
 }

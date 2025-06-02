@@ -11,21 +11,43 @@ public class ProjectConfig {
     private String basePackageName;
     private String apiContextPath;
     private String emailContact;
+    private List<ValueObjectConfig> valueObjects;
     private List<EntityConfig> entities;
     private List<ClientConfig> clients;
 
     @Data
+    public static class ValueObjectConfig {
+        private String name;
+        private String type;
+        private String description;
+        private ValidationConfig validation;
+
+        @Data
+        public static class ValidationConfig {
+            private String type;
+            private String message;
+            private String value;
+            private Integer min;
+            private Integer max;
+            private String regexp;
+        }
+    }
+
+    @Data
     public static class EntityConfig {
         private String name;
+        private String tableName;
         private List<FieldConfig> fields;
 
         @Data
         public static class FieldConfig {
             private String type;
             private String name;
+            private String valueObject; // Reference to ValueObject name if type is "ValueObject"
             private boolean required;
+            private boolean unique;
             private String description;
-            private List<String> validations;
+            private List<ValidationConfig> validations;
         }
     }
 

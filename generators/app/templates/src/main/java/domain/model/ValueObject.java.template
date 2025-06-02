@@ -1,0 +1,53 @@
+package <%= package_name %>.domain.model;
+
+import lombok.Value;
+import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotNull;
+import java.util.Objects;
+import java.util.UUID;
+
+@Value
+@Embeddable
+public class <%= valueObject.name %> {
+    @NotNull(message = "<%= valueObject.validation.message %>")
+    private final <%= valueObject.type %> value;
+
+    // Private constructor to enforce immutability
+    private <%= valueObject.name %>(<%= valueObject.type %> value) {
+        this.value = value;
+    }
+
+    // Factory method for creating new instances
+    public static <%= valueObject.name %> of(<%= valueObject.type %> value) {
+        Objects.requireNonNull(value, "<%= valueObject.validation.message %>");
+        return new <%= valueObject.name %>(value);
+    }
+
+    // For JPA
+    protected <%= valueObject.name %>() {
+        this.value = null;
+    }
+
+    // Getters
+    public <%= valueObject.type %> getValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return value.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        <%= valueObject.name %> that = (<%= valueObject.name %>) o;
+        return Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
+    }
+}

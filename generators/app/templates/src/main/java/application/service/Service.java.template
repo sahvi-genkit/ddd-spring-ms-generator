@@ -1,6 +1,9 @@
 package <%= base_package_name %>.application.service;
 
 import <%= base_package_name %>.domain.model.<%= entity_name %>;
+<% if (entity.fields.some(f => f.type === 'ValueObject' && f.name === 'id')) { %>
+import <%= base_package_name %>.domain.model.<%= entity.fields.find(f => f.type === 'ValueObject' && f.name === 'id').valueObject %>;
+<% } %>
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.util.Optional;
@@ -31,14 +34,14 @@ public interface <%= entity_name %>Service {
      * @param id the id of the entity.
      * @return the entity.
      */
-    Optional<<%= entity_name %>> findById(Long id);
+    Optional<<%= entity_name %>> findById(<% if (entity.fields.some(f => f.type === 'ValueObject' && f.name === 'id')) { %><%= entity.fields.find(f => f.type === 'ValueObject' && f.name === 'id').valueObject %><% } else { %>Long<% } %> id);
 
     /**
      * Delete the <%= entity_name.toLowerCase() %> by id.
      *
      * @param id the id of the entity.
      */
-    void deleteById(Long id);
+    void deleteById(<% if (entity.fields.some(f => f.type === 'ValueObject' && f.name === 'id')) { %><%= entity.fields.find(f => f.type === 'ValueObject' && f.name === 'id').valueObject %><% } else { %>Long<% } %> id);
 
     /**
      * Check if an entity exists by its id.
@@ -46,5 +49,5 @@ public interface <%= entity_name %>Service {
      * @param id the id of the entity.
      * @return true if the entity exists, false otherwise.
      */
-    boolean existsById(Long id);
+    boolean existsById(<% if (entity.fields.some(f => f.type === 'ValueObject' && f.name === 'id')) { %><%= entity.fields.find(f => f.type === 'ValueObject' && f.name === 'id').valueObject %><% } else { %>Long<% } %> id);
 } 

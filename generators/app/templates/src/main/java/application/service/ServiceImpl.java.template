@@ -2,6 +2,9 @@ package <%= base_package_name %>.application.service;
 
 import <%= base_package_name %>.domain.model.<%= entity_name %>;
 import <%= base_package_name %>.domain.repository.<%= entity_name %>Repository;
+<% if (entity.fields.some(f => f.type === 'ValueObject' && f.name === 'id')) { %>
+import <%= base_package_name %>.domain.model.<%= entity.fields.find(f => f.type === 'ValueObject' && f.name === 'id').valueObject %>;
+<% } %>
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,20 +39,20 @@ public class <%= entity_name %>ServiceImpl implements <%= entity_name %>Service 
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<<%= entity_name %>> findById(Long id) {
+    public Optional<<%= entity_name %>> findById(<% if (entity.fields.some(f => f.type === 'ValueObject' && f.name === 'id')) { %><%= entity.fields.find(f => f.type === 'ValueObject' && f.name === 'id').valueObject %><% } else { %>Long<% } %> id) {
         log.debug("Request to get <%= entity_name %> by id: {}", id);
         return <%= entity_name.toLowerCase() %>Repository.findById(id);
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(<% if (entity.fields.some(f => f.type === 'ValueObject' && f.name === 'id')) { %><%= entity.fields.find(f => f.type === 'ValueObject' && f.name === 'id').valueObject %><% } else { %>Long<% } %> id) {
         log.debug("Request to delete <%= entity_name %> with id: {}", id);
         <%= entity_name.toLowerCase() %>Repository.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existsById(Long id) {
+    public boolean existsById(<% if (entity.fields.some(f => f.type === 'ValueObject' && f.name === 'id')) { %><%= entity.fields.find(f => f.type === 'ValueObject' && f.name === 'id').valueObject %><% } else { %>Long<% } %> id) {
         log.debug("Request to check if <%= entity_name %> exists with id: {}", id);
         return <%= entity_name.toLowerCase() %>Repository.existsById(id);
     }

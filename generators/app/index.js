@@ -138,6 +138,15 @@ module.exports = class extends Generator {
       templateData
     );
 
+    // Generate value objects first
+    if (this.config.valueObjects) {
+      this.config.valueObjects.forEach(valueObject => {
+        if (valueObject.name) {
+          this._generateValueObject(valueObject);
+        }
+      });
+    }
+
     // Generate entities
     if (this.config.entities) {
       this.config.entities.forEach(entity => {
@@ -163,6 +172,48 @@ module.exports = class extends Generator {
     }
   }
 
+  _generateValueObject(valueObject) {
+    const valueObjectDir = path.join(
+      this.props.project_path || ".",
+      "src/main/java",
+      this.props.package_dir,
+      "domain/model"
+    );
+    mkdirp.sync(valueObjectDir);
+
+    const typeMap = {
+      String: "String",
+      Integer: "Integer",
+      Long: "Long",
+      Double: "Double",
+      UUID: "UUID",
+      BigDecimal: "BigDecimal",
+      LocalDate: "LocalDate",
+      LocalDateTime: "LocalDateTime"
+    };
+
+    const imports = new Set();
+    if (valueObject.type === "UUID") imports.add("java.util.UUID");
+    if (valueObject.type === "BigDecimal") imports.add("java.math.BigDecimal");
+    if (valueObject.type === "LocalDate") imports.add("java.time.LocalDate");
+    if (valueObject.type === "LocalDateTime") imports.add("java.time.LocalDateTime");
+
+    this.fs.copyTpl(
+      this.templatePath("src/main/java/domain/model/ValueObject.java.template"),
+      path.join(valueObjectDir, `${valueObject.name}.java`),
+      {
+        package_name: this.props.base_package_name,
+        valueObject: {
+          name: valueObject.name,
+          type: typeMap[valueObject.type] || valueObject.type,
+          description: valueObject.description,
+          validation: valueObject.validation
+        },
+        imports: Array.from(imports)
+      }
+    );
+  }
+
   _generateEntity(entity) {
     const entityDir = path.join(
       this.props.project_path || ".",
@@ -177,11 +228,13 @@ module.exports = class extends Generator {
       Integer: "Integer",
       Long: "Long",
       Double: "Double",
+      BigDecimal: "BigDecimal",
       LocalDate: "LocalDate",
       LocalDateTime: "LocalDateTime",
       List: "List",
       Map: "Map",
-      Boolean: "Boolean"
+      Boolean: "Boolean",
+      ValueObject: "ValueObject" // Add support for ValueObject type
     };
 
     const imports = new Set();
@@ -190,6 +243,11 @@ module.exports = class extends Generator {
       if (f.type === "LocalDateTime") imports.add("java.time.LocalDateTime");
       if (f.type === "List") imports.add("java.util.List");
       if (f.type === "Map") imports.add("java.util.Map");
+      if (f.type === "BigDecimal") imports.add("java.math.BigDecimal");
+      if (f.type === "ValueObject") {
+        // Add import for the referenced ValueObject
+        imports.add(`${this.props.base_package_name}.domain.model.${f.valueObject}`);
+      }
     });
 
     this.fs.copyTpl(
@@ -197,12 +255,14 @@ module.exports = class extends Generator {
       path.join(entityDir, `${entity.name}.java`),
       {
         base_package_name: this.props.base_package_name,
-        entity_name: entity.name,
+        entity: entity,
         imports: Array.from(imports),
         fields: entity.fields.map(f => ({
           type: typeMap[f.type] || f.type,
           name: f.name,
+          valueObject: f.valueObject,
           required: f.required,
+          unique: f.unique,
           description: f.description,
           validations: f.validations || []
         }))
@@ -229,7 +289,8 @@ module.exports = class extends Generator {
         entity_name: entity.name,
         api_context_path: this.props.api_context_path,
         crudOperations: entity.crudOperations || { enabled: false },
-        endpoints: entity.endpoints || []
+        endpoints: entity.endpoints || [],
+        entity: entity
       }
     );
   }
@@ -371,7 +432,8 @@ module.exports = class extends Generator {
       this.destinationPath(`src/main/java/${basePackageName.replace(/\./g, '/')}/domain/repository/${entityName}Repository.java`),
       {
         base_package_name: basePackageName,
-        entity_name: entityName
+        entity_name: entityName,
+        entity: entity
       }
     );
   }
@@ -386,7 +448,8 @@ module.exports = class extends Generator {
       this.destinationPath(`src/main/java/${basePackageName.replace(/\./g, '/')}/application/service/${entityName}Service.java`),
       {
         base_package_name: basePackageName,
-        entity_name: entityName
+        entity_name: entityName,
+        entity: entity
       }
     );
 
@@ -396,7 +459,8 @@ module.exports = class extends Generator {
       this.destinationPath(`src/main/java/${basePackageName.replace(/\./g, '/')}/application/service/${entityName}ServiceImpl.java`),
       {
         base_package_name: basePackageName,
-        entity_name: entityName
+        entity_name: entityName,
+        entity: entity
       }
     );
   }

@@ -4,18 +4,19 @@ This document provides a detailed explanation of the configuration options avail
 
 ## Table of Contents
 1. [Project Configuration](#project-configuration)
-2. [Entity Configuration](#entity-configuration)
+2. [ValueObject Configuration](#valueobject-configuration)
+3. [Entity Configuration](#entity-configuration)
    - [Fields](#fields)
    - [Validations](#validations)
    - [CRUD Operations](#crud-operations)
    - [Custom Endpoints](#custom-endpoints)
    - [Security](#security)
-3. [Client Configuration](#client-configuration)
-4. [Validation Types](#validation-types)
-5. [Response Types](#response-types)
-6. [Pagination and Sorting](#pagination-and-sorting)
-7. [Error Handling](#error-handling)
-8. [Testing Configuration](#testing-configuration)
+4. [Client Configuration](#client-configuration)
+5. [Validation Types](#validation-types)
+6. [Response Types](#response-types)
+7. [Pagination and Sorting](#pagination-and-sorting)
+8. [Error Handling](#error-handling)
+9. [Testing Configuration](#testing-configuration)
 
 ## Project Configuration
 
@@ -40,6 +41,133 @@ The root level configuration defines the basic project settings:
 - `apiContextPath`: Base URL path for all API endpoints
 - `emailContact`: Contact information for API documentation
 
+## ValueObject Configuration
+
+ValueObjects are immutable domain objects that encapsulate a single value and its validation rules. They are useful for representing domain concepts like IDs, money, email addresses, etc.
+
+```json
+{
+  "valueObjects": [
+    {
+      "name": "OrderId",
+      "type": "UUID",
+      "description": "Unique identifier for an order",
+      "validation": {
+        "type": "NotNull",
+        "message": "Order ID is required"
+      }
+    },
+    {
+      "name": "Email",
+      "type": "String",
+      "description": "Email address",
+      "validation": {
+        "type": "Pattern",
+        "regexp": "^[A-Za-z0-9+_.-]+@(.+)$",
+        "message": "Invalid email format"
+      }
+    },
+    {
+      "name": "Money",
+      "type": "BigDecimal",
+      "description": "Monetary value",
+      "validation": {
+        "type": "DecimalMin",
+        "value": "0.01",
+        "message": "Amount must be greater than 0"
+      }
+    }
+  ]
+}
+```
+
+### ValueObject Configuration Options
+- `name`: Name of the ValueObject class
+- `type`: Java data type (String, UUID, BigDecimal, etc.)
+- `description`: Description of the ValueObject's purpose
+- `validation`: Validation rules for the value
+  - `type`: Validation type (NotNull, Pattern, DecimalMin, etc.)
+  - `message`: Error message for validation failures
+  - `value`: Value for numeric validations
+  - `regexp`: Regular expression for pattern validation
+  - `min`: Minimum value for size validation
+  - `max`: Maximum value for size validation
+
+### Using ValueObjects in Entities
+
+ValueObjects can be used as fields in entities:
+
+```json
+{
+  "name": "Order",
+  "tableName": "orders",
+  "fields": [
+    {
+      "type": "ValueObject",
+      "name": "id",
+      "valueObject": "OrderId",
+      "required": true,
+      "unique": true,
+      "description": "Unique order identifier"
+    },
+    {
+      "type": "ValueObject",
+      "name": "email",
+      "valueObject": "Email",
+      "required": true,
+      "description": "Customer email address"
+    }
+  ]
+}
+```
+
+When using a ValueObject as a field:
+- `type` must be set to "ValueObject"
+- `valueObject` must reference the name of a defined ValueObject
+- `required` determines if the field is mandatory
+- `unique` determines if the field should have a unique constraint
+- `description` provides documentation for the field
+
+### Generated ValueObject Structure
+
+Each ValueObject is generated as an immutable class with:
+- Private constructor
+- Factory method `of()` for creating instances
+- Value validation
+- Proper equals/hashCode implementation
+- JPA embeddable support
+- Lombok `@Value` annotation for immutability
+
+Example generated code:
+```java
+@Value
+@Embeddable
+public class OrderId {
+    @NotNull(message = "Order ID is required")
+    private final UUID value;
+
+    private OrderId(UUID value) {
+        this.value = value;
+    }
+
+    public static OrderId of(UUID value) {
+        Objects.requireNonNull(value, "Order ID is required");
+        return new OrderId(value);
+    }
+
+    // JPA constructor
+    protected OrderId() {
+        this.value = null;
+    }
+
+    public UUID getValue() {
+        return value;
+    }
+
+    // equals, hashCode, toString implementations
+}
+```
+
 ## Entity Configuration
 
 Entities represent the domain models in your microservice. Each entity can have fields, validations, CRUD operations, and custom endpoints.
@@ -51,19 +179,29 @@ Fields define the properties of an entity:
 ```json
 {
   "name": "Order",
+  "tableName": "orders",
   "fields": [
     {
-      "type": "String",           // Java data type
-      "name": "orderNumber",      // Field name
-      "required": true,           // Whether the field is mandatory
-      "description": "Unique order number",  // Field description
-      "validations": [...]        // Validation rules
+      "type": "ValueObject",
+      "name": "id",
+      "valueObject": "OrderId",
+      "required": true,
+      "unique": true,
+      "description": "Unique order identifier"
+    },
+    {
+      "type": "String",
+      "name": "orderNumber",
+      "required": true,
+      "description": "Unique order number",
+      "validations": [...]
     }
   ]
 }
 ```
 
 #### Supported Field Types
+- `ValueObject`: Reference to a defined ValueObject (e.g., OrderId, Email, Money)
 - `String`: Text data
 - `Integer`: Whole numbers
 - `Long`: Large whole numbers
@@ -74,6 +212,12 @@ Fields define the properties of an entity:
 - `LocalDateTime`: Date with time
 - `LocalTime`: Time without date
 - `Enum`: Custom enumerated types
+
+When using a ValueObject type:
+- The `valueObject` property must specify the name of a defined ValueObject
+- The field will be embedded in the entity using JPA's `@Embedded` annotation
+- Validation rules are defined in the ValueObject itself
+- The field can be marked as `unique` to enforce uniqueness constraints
 
 ### Validations
 

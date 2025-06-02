@@ -5,10 +5,30 @@
   "basePackageName": "com.example.orders",
   "apiContextPath": "/api/v1",
   "emailContact": "dev@example.com",
+  "valueObjects": [
+    {
+      "name": "OrderId",
+      "type": "UUID",
+      "description": "Unique identifier for an order",
+      "validation": {
+        "type": "NotNull",
+        "message": "Order ID is required"
+      }
+    }
+  ],
   "entities": [
     {
       "name": "Orders",
+      "tableName": "orders",
       "fields": [
+        {
+          "type": "ValueObject",
+          "name": "id",
+          "valueObject": "OrderId",
+          "required": true,
+          "unique": true,
+          "description": "Unique order identifier"
+        },
         {
           "type": "String",
           "name": "orderNumber",
